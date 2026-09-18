@@ -90,11 +90,12 @@ jobs:
           OUT="$RUNNER_TEMP/build-out.txt"
           ERRORS=$(grep -aE "^e: " "$OUT" | head -50 || true)
           if [ -z "$ERRORS" ]; then
-            CAUSED=$(grep -aE "Caused by:|Execution failed for task|OutOfMemoryError|StackOverflowError|KotlinCompilerException" "$OUT" | head -25 || true)
-            TAIL=$(tail -c 11000 "$OUT")
-            ERRORS="$CAUSED
------ tail -----
-$TAIL"
+            {
+              grep -aE "Caused by:|Execution failed for task|OutOfMemoryError|StackOverflowError" "$OUT" | head -25 || true;
+              echo "----- tail -----";
+              tail -c 11000 "$OUT";
+            } > /tmp/errfull.txt
+            ERRORS=$(cat /tmp/errfull.txt)
           fi
           SHA=$(git rev-parse HEAD)
           BODY=$(printf 'Build #%s errors:\n```\n%s\n```' "$GITHUB_RUN_NUMBER" "$ERRORS")
